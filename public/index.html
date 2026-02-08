@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#00F5D4">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <title>Bounty Board</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0a0f;
+      --card: #1a1a2e;
+      --accent: #00F5D4;
+      --text: #ffffff;
+      --muted: #888;
+      --success: #00ff88;
+      --warning: #ffaa00;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    header {
+      background: var(--card);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    header h1 {
+      font-size: 20px;
+      color: var(--accent);
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 12px 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tab {
+      padding: 8px 16px;
+      background: var(--card);
+      border: none;
+      border-radius: 20px;
+      color: var(--muted);
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab.active {
+      background: var(--accent);
+      color: var(--bg);
+    }
+    .bounties {
+      padding: 0 16px;
+    }
+    .bounty-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .bounty-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .bounty-title {
+      font-size: 16px;
+      font-weight: 600;
+      flex: 1;
+      margin-right: 12px;
+    }
+    .bounty-reward {
+      background: var(--accent);
+      color: var(--bg);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .bounty-desc {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .bounty-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .tag {
+      background: rgba(0,245,212,0.1);
+      color: var(--accent);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .bounty-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.1);
+      color: var(--text);
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      text-decoration: none;
+    }
+    .nav-item.active { color: var(--accent); }
+    .nav-icon {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--card);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .wallet-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+    }
+    .wallet-modal.active { display: flex; }
+    .modal-content {
+      background: var(--card);
+      padding: 24px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .modal-content h2 { margin-bottom: 16px; }
+    .modal-content input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .install-banner {
+      background: linear-gradient(135deg, var(--accent), #00BBF9);
+      padding: 12px 20px;
+      text-align: center;
+      display: none;
+    }
+    .install-banner.show { display: block; }
+    .install-btn {
+      background: white;
+      color: var(--bg);
+      border: none;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div id="install-banner" class="install-banner">
+    📱 Install app for better experience
+    <button class="install-btn" id="install-btn">Install</button>
+  </div>
+
+  <header>
+    <h1>🎯 Bounty Board</h1>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-filter="all">All</button>
+    <button class="tab" data-filter="coding">Coding</button>
+    <button class="tab" data-filter="writing">Writing</button>
+    <button class="tab" data-filter="design">Design</button>
+  </div>
+
+  <div id="bounties" class="bounties">
+    <div class="loading">
+      <div class="spinner"></div>
+      Loading bounties...
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item active">
+      <span class="nav-icon">🎯</span>
+      Bounties
+    </a>
+    <a href="#" class="nav-item" id="wallet-btn">
+      <span class="nav-icon">👛</span>
+      Wallet
+    </a>
+    <a href="#" class="nav-item" id="notify-btn">
+      <span class="nav-icon">🔔</span>
+      Alerts
+    </a>
+  </nav>
+
+  <div id="wallet-modal" class="wallet-modal">
+    <div class="modal-content">
+      <h2>Connect Wallet</h2>
+      <input type="text" id="wallet-input" placeholder="0x..." />
+      <button class="btn btn-primary" id="save-wallet">Save Wallet</button>
+    </div>
+  </div>
+
+  <script>
+    let bounties = [];
+    let currentFilter = 'all';
+    let walletAddress = localStorage.getItem('walletAddress') || '';
+    let deferredPrompt;
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('SW registered'))
+        .catch(err => console.log('SW failed', err));
+    }
+
+    // Install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('install-banner').classList.add('show');
+    });
+
+    document.getElementById('install-btn')?.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        document.getElementById('install-banner').classList.remove('show');
+      }
+    });
+
+    // Fetch bounties
+    async function loadBounties() {
+      try {
+        const res = await fetch('/api/bounties');
+        bounties = await res.json();
+        renderBounties();
+      } catch (err) {
+        document.getElementById('bounties').innerHTML =
+          '<div class="empty">Failed to load bounties. Pull to refresh.</div>';
+      }
+    }
+
+    // Render bounties
+    function renderBounties() {
+      const container = document.getElementById('bounties');
+      let filtered = bounties.filter(b => b.status === 'open');
+
+      if (currentFilter !== 'all') {
+        filtered = filtered.filter(b =>
+          b.tags?.some(t => t.toLowerCase().includes(currentFilter))
+        );
+      }
+
+      filtered.sort((a, b) => parseFloat(b.reward) - parseFloat(a.reward));
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty">No bounties found</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(b => `
+        <div class="bounty-card" data-id="${b.id}">
+          <div class="bounty-header">
+            <div class="bounty-title">${b.title}</div>
+            <div class="bounty-reward">${b.rewardFormatted}</div>
+          </div>
+          <div class="bounty-desc">${b.description || 'No description'}</div>
+          <div class="bounty-tags">
+            ${(b.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}
+          </div>
+          <div class="bounty-actions">
+            <button class="btn btn-secondary" onclick="viewBounty('${b.id}')">Details</button>
+            <button class="btn btn-primary" onclick="claimBounty('${b.id}')">Claim</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Filter tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentFilter = tab.dataset.filter;
+        renderBounties();
+      });
+    });
+
+    // Wallet modal
+    document.getElementById('wallet-btn').addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('wallet-input').value = walletAddress;
+      document.getElementById('wallet-modal').classList.add('active');
+    });
+
+    document.getElementById('wallet-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'wallet-modal') {
+        document.getElementById('wallet-modal').classList.remove('active');
+      }
+    });
+
+    document.getElementById('save-wallet').addEventListener('click', () => {
+      walletAddress = document.getElementById('wallet-input').value;
+      localStorage.setItem('walletAddress', walletAddress);
+      document.getElementById('wallet-modal').classList.remove('active');
+      alert('Wallet saved!');
+    });
+
+    // Notifications
+    document.getElementById('notify-btn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      if ('Notification' in window) {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          alert('Notifications enabled! You will be notified of new bounties.');
+        }
+      }
+    });
+
+    // Claim bounty
+    async function claimBounty(id) {
+      if (!walletAddress) {
+        document.getElementById('wallet-modal').classList.add('active');
+        return;
+      }
+
+      try {
+        const res = await fetch(`https://bounty.owockibot.xyz/bounties/${id}/claim`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: walletAddress })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          alert(`Claimed: ${data.title}\nReward: ${data.rewardFormatted}`);
+          loadBounties();
+        } else {
+          alert(`Error: ${data.error}`);
+        }
+      } catch (err) {
+        alert('Failed to claim bounty');
+      }
+    }
+
+    // View bounty
+    function viewBounty(id) {
+      window.open(`https://bounty.owockibot.xyz/bounty/${id}`, '_blank');
+    }
+
+    // Initial load
+    loadBounties();
+  </script>
+</body>
+</html>

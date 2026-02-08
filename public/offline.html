@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - Bounty Board</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0f;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 { color: #00F5D4; margin-bottom: 16px; }
+    p { color: #888; }
+    button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      background: #00F5D4;
+      color: #0a0a0f;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>📵 You're Offline</h1>
+    <p>Connect to the internet to browse bounties</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>
+</body>
+</html>
